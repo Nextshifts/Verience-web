@@ -1,9 +1,12 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
+const AUTOPLAY_MS = 4500;
+
 export default function ImageCarousel({ images, alt }) {
   const [index, setIndex] = useState(0);
+  const [paused, setPaused] = useState(false);
 
   const goTo = useCallback(
     (next) => {
@@ -12,6 +15,16 @@ export default function ImageCarousel({ images, alt }) {
     },
     [images.length]
   );
+
+  useEffect(() => {
+    if (images.length <= 1 || paused) return;
+
+    const timer = setInterval(() => {
+      setIndex((prev) => (prev + 1) % images.length);
+    }, AUTOPLAY_MS);
+
+    return () => clearInterval(timer);
+  }, [images.length, paused]);
 
   if (!images.length) {
     return (
@@ -22,7 +35,13 @@ export default function ImageCarousel({ images, alt }) {
   }
 
   return (
-    <div className="relative group">
+    <div
+      className="relative group"
+      onMouseEnter={() => setPaused(true)}
+      onMouseLeave={() => setPaused(false)}
+      onFocus={() => setPaused(true)}
+      onBlur={() => setPaused(false)}
+    >
       <div className="photo-frame aspect-[16/10] relative overflow-hidden bg-[var(--color-canvas-night)]">
         <AnimatePresence mode="wait">
           <motion.img
